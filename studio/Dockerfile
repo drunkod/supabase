@@ -18,14 +18,14 @@
 FROM node:12.7-alpine AS build
 WORKDIR /usr/src/app
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm clean-install
 COPY . .
 RUN npm run build
 
 #STAGE 2
 FROM nginx:1.17.1-alpine as base
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY --from=build /usr/src/app/dist/sample-app /usr/share/nginx/html
+COPY --from=build /usr/src/app/studio /usr/share/nginx/html
 FROM base as dev
 EXPOSE 8082
 CMD ["npm", "run", "dev"]
