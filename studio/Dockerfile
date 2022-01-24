@@ -7,14 +7,25 @@
 #    docker builder prune
 
 
-FROM node:14 as base
+# FROM node:14 as base
+# WORKDIR /usr/src/app
+# # Do `npm ci` separately so we can cache `node_modules`
+# # https://nodejs.org/en/docs/guides/nodejs-docker-webapp/
+# COPY package*.json ./
+# RUN npm clean-install
+# COPY . .
+#STAGE 1
+FROM node:12.7-alpine AS build
 WORKDIR /usr/src/app
-# Do `npm ci` separately so we can cache `node_modules`
-# https://nodejs.org/en/docs/guides/nodejs-docker-webapp/
-COPY package*.json ./
-RUN npm clean-install
+COPY package.json package-lock.json ./
+RUN npm install
 COPY . .
+RUN npm run build
 
+#STAGE 2
+FROM nginx:1.17.1-alpine as base
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /usr/src/app/dist/sample-app /usr/share/nginx/html
 FROM base as dev
 EXPOSE 8082
 CMD ["npm", "run", "dev"]
